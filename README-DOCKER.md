@@ -41,11 +41,18 @@ Este proyecto contiene 8 microservicios que se pueden desplegar fácilmente usan
 1. **Crear bases de datos**: Usa `init-scripts/01-create-databases.sql` para crear las bases de datos necesarias
 2. **Configurar permisos**: Usa `fix-mysql-permissions.sql` para otorgar permisos de acceso desde contenedores Docker
 
+Ejecuta los siguientes comandos en tu servidor MySQL local (192.168.20.158):
+
 ```bash
-# Ejecutar en el servidor MySQL local (192.168.20.158)
+# Crear las bases de datos necesarias
 mysql -h 192.168.20.158 -u root -p < init-scripts/01-create-databases.sql
+
+# Otorgar permisos al usuario naturepharma desde contenedores Docker
+# IMPORTANTE: Este script debe ejecutarse DESPUÉS de cualquier error de Access Denied
 mysql -h 192.168.20.158 -u root -p < fix-mysql-permissions.sql
 ```
+
+**Nota importante:** Si los contenedores siguen mostrando errores de "Access Denied", ejecuta el script `fix-mysql-permissions.sql` nuevamente. Este script crea múltiples entradas de usuario para diferentes rangos de IP de Docker (172.18.0.%, 172.%.%.%) para asegurar la conectividad desde cualquier contenedor.
 
 ## Requisitos Previos
 
@@ -188,15 +195,19 @@ Todos los servicios están en la misma red Docker (`microservices-network`), lo 
 
 ### Problemas comunes:
 
-1. **Error de acceso denegado a MySQL desde contenedores Docker:**
-   ```
-   Access denied for user 'naturepharma'@'172.18.0.x' (using password: YES)
-   ```
-   
-   **Solución**:
+1. **Error "Access denied for user 'naturepharma'@'172.x.x.x'"**: Este es el error más común. Para solucionarlo:
    ```bash
-   # Ejecutar el script de permisos en MySQL local
+   # Detener los contenedores
+   docker-compose down
+   
+   # Ejecutar el script de permisos (puede requerir múltiples ejecuciones)
    mysql -h 192.168.20.158 -u root -p < fix-mysql-permissions.sql
+   
+   # Verificar que el usuario fue creado correctamente
+   mysql -h 192.168.20.158 -u root -p -e "SELECT User, Host FROM mysql.user WHERE User = 'naturepharma';"
+   
+   # Reiniciar los contenedores
+   docker-compose up -d
    ```
    
    Este script otorga permisos al usuario 'naturepharma' para conectarse desde cualquier IP, incluyendo las IPs dinámicas de los contenedores Docker.
