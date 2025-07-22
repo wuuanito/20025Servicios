@@ -1,0 +1,228 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL principal
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-main
+    environment:
+      MYSQL_ROOT_PASSWORD: Root123!
+      MYSQL_USER: naturepharma
+      MYSQL_PASSWORD: Root123!
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Base de datos MySQL para OSMOSIS (puerto diferente)
+  mysql-osmosis:
+    image: mysql:8.0
+    container_name: mysql-osmosis
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: osmosis_monitor
+    ports:
+      - "3050:3306"
+    volumes:
+      - mysql_osmosis_data:/var/lib/mysql
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Servicio de Autenticación
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "4001:4001"
+    environment:
+      - NODE_ENV=production
+      - PORT=4001
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=naturepharma
+      - DB_PASSWORD=Root123!
+      - AUTH_DB_NAME=auth_service_db
+      - JWT_SECRET=your_jwt_secret_key_should_be_long_and_secure
+      - JWT_EXPIRES_IN=24h
+    depends_on:
+      - mysql
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    volumes:
+      - ./auth-service/logs:/app/logs
+
+  # Servicio de Solicitudes OT
+  solicitudes-service:
+    build:
+      context: ./ServicioSolicitudesOt
+      dockerfile: Dockerfile
+    container_name: solicitudes-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=naturepharma
+      - DB_PASSWORD=Root123!
+      - DB_NAME=sistema_solicitudes
+      - JWT_SECRET=tu_jwt_secret_muy_seguro_aqui_cambiar_en_produccion
+      - FRONTEND_URL=http://localhost:3000
+      - UPLOAD_PATH=./uploads
+      - MAX_FILE_SIZE=10485760
+      - LOG_LEVEL=info
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+    depends_on:
+      - mysql
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    volumes:
+      - ./ServicioSolicitudesOt/uploads:/app/uploads
+
+  # Servidor RPS
+  servidor-rps:
+    build:
+      context: ./SERVIDOR_RPS
+      dockerfile: Dockerfile
+    container_name: servidor-rps
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  # Servicio de Calendario
+  calendar-service:
+    build:
+      context: ./calendar-service
+      dockerfile: Dockerfile
+    container_name: calendar-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=naturepharma
+      - DB_PASSWORD=Root123!
+      - DB_NAME=calendar_service_db
+    depends_on:
+      - mysql
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  # Servicio de Laboratorio
+  laboratorio-service:
+    build:
+      context: ./laboratorio-service
+      dockerfile: Dockerfile
+    container_name: laboratorio-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - BASE_URL=http://localhost:3004
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=laboratorio_service_db
+      - DB_USER=naturepharma
+      - DB_PASSWORD=Root123!
+      - FRONTEND_URL=http://localhost:3000
+      - MAX_FILE_SIZE=5242880
+      - UPLOAD_PATH=./uploads/defectos
+      - LOG_LEVEL=info
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+    depends_on:
+      - mysql
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    volumes:
+      - ./laboratorio-service/uploads:/app/uploads
+
+  # Tecnomaco Backend
+  tecnomaco-backend:
+    build:
+      context: ./Tecnomaco-Backend
+      dockerfile: Dockerfile
+    container_name: tecnomaco-backend
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=naturepharma
+      - DB_PASSWORD=Root123!
+      - DB_NAME=tecnomaco_db
+    depends_on:
+      - mysql
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  # Cremer Backend
+  cremer-backend:
+    build:
+      context: ./Cremer-Backend
+      dockerfile: Dockerfile
+    container_name: cremer-backend
+    ports:
+      - "3006:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=naturepharma
+      - DB_PASSWORD=Root123!
+      - DB_NAME=cremer_db
+    depends_on:
+      - mysql
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  # OSMOSIS Service
+  osmosis-service:
+    build:
+      context: ./OSMOSIS
+      dockerfile: Dockerfile
+    container_name: osmosis-service
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - mysql-osmosis
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  mysql_osmosis_data:
+
+networks:
+  microservices-network:
+    driver: bridge
