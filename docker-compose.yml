@@ -181,6 +181,34 @@ services:
     volumes:
       - ./OSMOSIS/logs:/app/logs
 
+  # Docker Services Monitor
+  docker-monitor:
+    build:
+      context: ./monitor
+      dockerfile: Dockerfile
+    container_name: docker-monitor
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker-compose.yml:/app/docker-compose.yml:ro
+    privileged: true
+    depends_on:
+      - auth-service
+      - solicitudes-service
+      - servidor-rps
+      - calendar-service
+      - laboratorio-service
+      - tecnomaco-backend
+      - cremer-backend
+      - osmosis-service
+
 networks:
   microservices-network:
     driver: bridge

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Servicios Docker - NaturePharma</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-server"></i> Monitor de Servicios Docker</h1>
+                <div class="header-info">
+                    <span class="server-info">Servidor: 192.168.20.158</span>
+                    <span class="last-update">Última actualización: <span id="lastUpdate">--</span></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- System Stats -->
+        <section class="system-stats">
+            <div class="stat-card">
+                <i class="fas fa-memory"></i>
+                <div class="stat-info">
+                    <h3>Memoria</h3>
+                    <p id="memoryUsage">Cargando...</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-hdd"></i>
+                <div class="stat-info">
+                    <h3>Disco</h3>
+                    <p id="diskUsage">Cargando...</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-microchip"></i>
+                <div class="stat-info">
+                    <h3>CPU</h3>
+                    <p id="cpuUsage">Cargando...</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <div class="stat-info">
+                    <h3>Uptime</h3>
+                    <p id="systemUptime">Cargando...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Global Controls -->
+        <section class="global-controls">
+            <h2><i class="fas fa-cogs"></i> Controles Globales</h2>
+            <div class="control-buttons">
+                <button class="btn btn-success" onclick="startAllServices()">
+                    <i class="fas fa-play"></i> Iniciar Todos
+                </button>
+                <button class="btn btn-warning" onclick="restartAllServices()">
+                    <i class="fas fa-redo"></i> Reiniciar Todos
+                </button>
+                <button class="btn btn-danger" onclick="stopAllServices()">
+                    <i class="fas fa-stop"></i> Detener Todos
+                </button>
+                <button class="btn btn-info" onclick="refreshStatus()">
+                    <i class="fas fa-sync"></i> Actualizar Estado
+                </button>
+            </div>
+        </section>
+
+        <!-- Services Grid -->
+        <section class="services-section">
+            <h2><i class="fas fa-list"></i> Estado de Servicios</h2>
+            <div class="services-grid" id="servicesGrid">
+                <!-- Los servicios se cargarán dinámicamente -->
+            </div>
+        </section>
+
+        <!-- Logs Section -->
+        <section class="logs-section">
+            <h2><i class="fas fa-file-alt"></i> Logs de Servicios</h2>
+            <div class="logs-controls">
+                <select id="logService" class="form-select">
+                    <option value="">Seleccionar servicio...</option>
+                </select>
+                <select id="logLines" class="form-select">
+                    <option value="50">50 líneas</option>
+                    <option value="100">100 líneas</option>
+                    <option value="200">200 líneas</option>
+                    <option value="500">500 líneas</option>
+                </select>
+                <button class="btn btn-primary" onclick="loadLogs()">
+                    <i class="fas fa-download"></i> Cargar Logs
+                </button>
+                <button class="btn btn-secondary" onclick="clearLogs()">
+                    <i class="fas fa-trash"></i> Limpiar
+                </button>
+            </div>
+            <div class="logs-container">
+                <pre id="logsContent">Selecciona un servicio para ver sus logs...</pre>
+            </div>
+        </section>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Procesando...</p>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notifications" class="notifications"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

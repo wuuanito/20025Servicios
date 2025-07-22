@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  docker-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docker-monitor-standalone
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DOCKER_COMPOSE_PATH=/app/docker-compose.yml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../docker-compose.yml:/app/docker-compose.yml:ro
+    privileged: true
+    restart: unless-stopped
+    networks:
+      - monitor-network
+
+networks:
+  monitor-network:
+    driver: bridge
