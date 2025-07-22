@@ -15,7 +15,7 @@ const io = socketIo(server, {
 });
 
 const PORT = process.env.PORT || 8080;
-const DOCKER_COMPOSE_PATH = process.env.DOCKER_COMPOSE_PATH || '/home/rnp/20025Servicios';
+const DOCKER_COMPOSE_PATH = process.env.DOCKER_COMPOSE_PATH || '/app';
 
 // Middleware
 app.use(cors());
@@ -86,11 +86,12 @@ function getServiceLogs(serviceName, lines = 50, callback) {
 
 // Función para obtener estadísticas del sistema
 function getSystemStats(callback) {
+  // Obtener estadísticas de Docker en lugar de sistema host
   const commands = {
-    memory: "free -h | grep '^Mem:'",
-    disk: "df -h / | tail -1",
-    cpu: "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1",
-    uptime: "uptime -p"
+    containers: 'docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"',
+    images: 'docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"',
+    volumes: 'docker volume ls --format "table {{.Driver}}\t{{.Name}}"',
+    networks: 'docker network ls --format "table {{.Name}}\t{{.Driver}}\t{{.Scope}}"'
   };
   
   const stats = {};

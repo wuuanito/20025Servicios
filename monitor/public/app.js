@@ -111,10 +111,15 @@ function populateLogServiceSelect() {
 
 // Actualizar estadísticas del sistema
 function updateSystemStats() {
-    document.getElementById('memoryUsage').textContent = systemStats.memory || 'N/A';
-    document.getElementById('diskUsage').textContent = systemStats.disk || 'N/A';
-    document.getElementById('cpuUsage').textContent = systemStats.cpu ? `${systemStats.cpu}%` : 'N/A';
-    document.getElementById('systemUptime').textContent = systemStats.uptime || 'N/A';
+    // Mostrar estadísticas de Docker
+    document.getElementById('containersInfo').textContent = systemStats.containers ? 
+        systemStats.containers.split('\n').length - 1 + ' contenedores' : 'N/A';
+    document.getElementById('imagesInfo').textContent = systemStats.images ? 
+        systemStats.images.split('\n').length - 1 + ' imágenes' : 'N/A';
+    document.getElementById('volumesInfo').textContent = systemStats.volumes ? 
+        systemStats.volumes.split('\n').length - 1 + ' volúmenes' : 'N/A';
+    document.getElementById('networksInfo').textContent = systemStats.networks ? 
+        systemStats.networks.split('\n').length - 1 + ' redes' : 'N/A';
 }
 
 // Actualizar visualización de servicios
