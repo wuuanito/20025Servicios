@@ -37,8 +37,15 @@ Este proyecto contiene 8 microservicios que se pueden desplegar fácilmente usan
 - **Usuario**: naturepharma
 - **Contraseña**: Root123!
 
-### Script de Creación de Bases de Datos:
-Puedes usar el archivo `init-scripts/01-create-databases.sql` para crear las bases de datos necesarias en tu servidor MySQL local.
+### Scripts de Configuración:
+1. **Crear bases de datos**: Usa `init-scripts/01-create-databases.sql` para crear las bases de datos necesarias
+2. **Configurar permisos**: Usa `fix-mysql-permissions.sql` para otorgar permisos de acceso desde contenedores Docker
+
+```bash
+# Ejecutar en el servidor MySQL local (192.168.20.158)
+mysql -h 192.168.20.158 -u root -p < init-scripts/01-create-databases.sql
+mysql -h 192.168.20.158 -u root -p < fix-mysql-permissions.sql
+```
 
 ## Requisitos Previos
 
@@ -181,21 +188,34 @@ Todos los servicios están en la misma red Docker (`microservices-network`), lo 
 
 ### Problemas comunes:
 
-1. **Puerto ya en uso:**
+1. **Error de acceso denegado a MySQL desde contenedores Docker:**
+   ```
+   Access denied for user 'naturepharma'@'172.18.0.x' (using password: YES)
+   ```
+   
+   **Solución**:
+   ```bash
+   # Ejecutar el script de permisos en MySQL local
+   mysql -h 192.168.20.158 -u root -p < fix-mysql-permissions.sql
+   ```
+   
+   Este script otorga permisos al usuario 'naturepharma' para conectarse desde cualquier IP, incluyendo las IPs dinámicas de los contenedores Docker.
+
+2. **Puerto ya en uso:**
 ```bash
 # Verificar qué proceso usa el puerto
 sudo netstat -tulpn | grep :3001
 # Detener el proceso o cambiar el puerto en docker-compose.yml
 ```
 
-2. **Problemas de permisos:**
+3. **Problemas de permisos de archivos:**
 ```bash
 # Asegurar permisos correctos
 sudo chown -R $USER:$USER .
 sudo chmod -R 755 .
 ```
 
-3. **Problemas de memoria:**
+4. **Problemas de memoria:**
 ```bash
 # Limpiar imágenes no utilizadas
 docker system prune -a
@@ -204,7 +224,13 @@ docker system prune -a
 docker system df
 ```
 
-4. **Reiniciar todo el sistema:**
+5. **Verificar conectividad a MySQL desde contenedores:**
+```bash
+# Probar conexión desde un contenedor
+docker run --rm mysql:8.0 mysql -h 192.168.20.158 -u naturepharma -p
+```
+
+6. **Reiniciar todo el sistema:**
 ```bash
 docker-compose down
 docker system prune -a
