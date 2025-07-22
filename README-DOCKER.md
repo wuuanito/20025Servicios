@@ -15,14 +15,42 @@ Este proyecto contiene 8 microservicios que se pueden desplegar fácilmente usan
 | cremer-backend | 3006 | Backend para Cremer |
 | osmosis-service | 8000 | Servicio de monitoreo de ósmosis |
 
-## Bases de Datos
+## Base de Datos
 
-- **MySQL Principal** (Puerto 3306): Para la mayoría de servicios
-- **MySQL OSMOSIS** (Puerto 3050): Específico para el servicio de ósmosis
+- **MySQL Local** (IP: 192.168.20.158, Puerto 3306): Base de datos MySQL ejecutándose localmente
+
+## Configuración de Base de Datos
+
+### Bases de Datos Requeridas en MySQL Local (192.168.20.158:3306):
+- `auth_service_db` - Para el servicio de autenticación
+- `auth_service_test` - Para pruebas del servicio de autenticación
+- `sistema_solicitudes` - Para el servicio de solicitudes
+- `calendar_service_db` - Para el servicio de calendario
+- `laboratorio_service_db` - Para el servicio de laboratorio
+- `tecnomaco_db` - Para Tecnomaco Backend
+- `cremer_db` - Para Cremer Backend
+- `osmosis_monitor` - Para el servicio OSMOSIS
+
+### Credenciales MySQL Local:
+- **Host**: 192.168.20.158
+- **Puerto**: 3306
+- **Usuario**: naturepharma
+- **Contraseña**: Root123!
+
+### Script de Creación de Bases de Datos:
+Puedes usar el archivo `init-scripts/01-create-databases.sql` para crear las bases de datos necesarias en tu servidor MySQL local.
 
 ## Requisitos Previos
 
-### En Ubuntu Server:
+1. **Docker** instalado en el servidor Ubuntu
+2. **Docker Compose** instalado
+3. **MySQL Server** ejecutándose localmente en la IP 192.168.20.158:3306
+4. Puertos disponibles: 3001, 3002, 3003, 3004, 3005, 4001, 8000
+5. Al menos 2GB de RAM disponible
+6. Espacio en disco suficiente para las imágenes
+7. Acceso de red desde los contenedores Docker a la IP 192.168.20.158
+
+### Instalación en Ubuntu Server:
 
 1. **Instalar Docker:**
 ```bash
@@ -89,9 +117,6 @@ docker-compose logs auth-service
 # Detener todos los servicios
 docker-compose down
 
-# Detener y eliminar volúmenes
-docker-compose down -v
-
 # Reiniciar un servicio específico
 docker-compose restart auth-service
 
@@ -112,16 +137,16 @@ docker-compose exec auth-service sh
 docker-compose logs -f auth-service
 ```
 
-### Base de datos
+### Base de datos local
 ```bash
-# Conectar a MySQL principal
-docker-compose exec mysql mysql -u naturepharma -p
-
-# Conectar a MySQL OSMOSIS
-docker-compose exec mysql-osmosis mysql -u root -p
+# Conectar a MySQL local desde el servidor
+mysql -h 192.168.20.158 -u naturepharma -p
 
 # Backup de base de datos
-docker-compose exec mysql mysqldump -u naturepharma -p sistema_solicitudes > backup.sql
+mysqldump -h 192.168.20.158 -u naturepharma -p sistema_solicitudes > backup.sql
+
+# Crear las bases de datos necesarias
+mysql -h 192.168.20.158 -u naturepharma -p < init-scripts/01-create-databases.sql
 ```
 
 ## Configuración de Red

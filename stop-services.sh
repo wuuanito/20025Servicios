@@ -19,7 +19,7 @@ if [ "$1" = "--clean" ]; then
     echo "🧹 Limpieza completa solicitada..."
     
     # Eliminar volúmenes
-    echo "💾 Eliminando volúmenes de base de datos..."
+    echo "💾 Eliminando volúmenes..."
     docker-compose down -v
     
     # Eliminar imágenes del proyecto
